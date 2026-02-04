@@ -23,7 +23,7 @@ import LogAktivitas from './pages/admin/LogAktivitas';
 const Dashboard = ({ role }) => (
     <div className="card glass p-5 text-white text-center">
         <h2 className="fw-bold mb-3">Selamat Datang, {role}!</h2>
-        <p className="text-muted">Anda masuk ke sistem inventaris sekolah UKK V2.</p>
+        <p className="text-muted">NaekoRa_RentCost</p>
         <div className="mt-4">
             <i className="bi bi-shield-check display-1 text-primary"></i>
         </div>

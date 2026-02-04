@@ -21,12 +21,12 @@ const getDataPeminjamanById = (id_peminjam, callback) => {
 };
 
 
-const postDataPeminjaman = (id_peminjam, pinjam_sampai, alasan, total_harga, callback) => {
+const postDataPeminjaman = (id_peminjam, digunakan_pada, alasan, total_harga, callback) => {
     const q = `
-        INSERT INTO data_peminjaman (id_peminjam, pinjam_sampai, alasan, total_harga)
+        INSERT INTO data_peminjaman (id_peminjam, digunakan_pada, alasan, total_harga)
         VALUES (?, ?, ?, ?)
         `;
-    koneksi.query(q, [id_peminjam, pinjam_sampai, alasan, total_harga], callback);
+    koneksi.query(q, [id_peminjam, digunakan_pada, alasan, total_harga], callback);
 };
 
 const mengajukanPeminjaman = (id_data_peminjaman, alat_id, jumlah, callback) => {

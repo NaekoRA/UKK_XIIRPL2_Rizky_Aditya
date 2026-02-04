@@ -53,7 +53,7 @@ const Sidebar = () => {
     return (
         <div className="d-flex flex-column flex-shrink-0 p-3 sidebar h-100" style={{ width: '280px' }}>
             <div className="mb-4 text-center">
-                <h4 className="fw-bold mb-0">UKK V2</h4>
+                <h4 className="fw-bold mb-0">NaekoRa_RentCost</h4>
                 <small className="text-muted text-uppercase">{role}</small>
             </div>
             <hr />

@@ -21,11 +21,15 @@ const LogAktivitas = () => {
             // Actually, I saw log_controller or similar? No, only user, kategori, alat, peminjaman, pengembalian.
             // I'll assume I should create the log viewer based on the table.
 
-            const response = await fetch("http://localhost:5000/api/data/peminjaman", { // Placeholder
+            const response = await fetch("http://localhost:5000/api/log", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            // ... (In a real scenario I'd need a backend route for logs)
-            setLogs([]);
+            if (response.ok) {
+                const data = await response.json();
+                setLogs(data);
+            } else {
+                console.error("Failed to fetch logs:", response.statusText);
+            }
             setLoading(false);
         } catch (error) {
             console.error("Error fetch logs:", error);

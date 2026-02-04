@@ -55,7 +55,7 @@ const Laporan = () => {
                             <tr key={item.id}>
                                 <td>{index + 1}</td>
                                 <td>User ID: {item.id_peminjam}</td>
-                                <td>{new Date(item.di_pinjam_pada).toLocaleDateString()}</td>
+                                <td>{new Date(item.meminjam_pada).toLocaleDateString()}</td>
                                 <td>{new Date(item.pinjam_sampai).toLocaleDateString()}</td>
                                 <td>{item.status}</td>
                                 <td>Rp {item.total_harga?.toLocaleString()}</td>

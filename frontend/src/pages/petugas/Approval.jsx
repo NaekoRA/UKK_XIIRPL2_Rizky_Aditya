@@ -89,7 +89,7 @@ const Approval = () => {
                                 <tr key={item.id}>
                                     <td>{item.id}</td>
                                     <td>{item.id_peminjam}</td>
-                                    <td>{new Date(item.di_pinjam_pada).toLocaleDateString()}</td>
+                                    <td>{new Date(item.meminjam_pada).toLocaleDateString()}</td>
                                     <td>{item.alasan}</td>
                                     <td>Rp {item.total_harga?.toLocaleString()}</td>
                                     <td>

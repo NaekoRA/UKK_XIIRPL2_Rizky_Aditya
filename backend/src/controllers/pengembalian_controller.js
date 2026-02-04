@@ -50,7 +50,8 @@ const kembalikanAlat = (req, res) => {
 
                 // A. Hitung Denda Keterlambatan per barang
                 // (10% harga barang / hari, minimal denda 30k)
-                if (lateDays > 0) {
+                // Denda hanya dikenakan jika telat lebih dari 3 hari (sesuai permintaan user)
+                if (lateDays > 3) {
                     const lateFineCalculated = 0.1 * harga * lateDays;
                     dendaItem += Math.max(lateFineCalculated, 30000);
                 }

@@ -6,6 +6,7 @@ const kategori_controller = require("../controllers/kategori_controller");
 const alat_controller = require("../controllers/alat_controller");
 const peminjaman_controller = require("../controllers/peminjaman_controller");
 const pengembalian_controller = require("../controllers/pengembalian_controller");
+const log = require("../models/log_model");
 
 const upload = require("../middleware/upload");
 
@@ -47,4 +48,6 @@ router.get("/pengembalian/:id", pengembalian_controller.getPengembalianById);
 router.post("/pengembalian", authJWT("peminjam"), pengembalian_controller.kembalikanAlat);
 router.put("/pengembalian/:id", authJWT("admin"), pengembalian_controller.updatePengembalian);
 router.delete("/pengembalian/:id", authJWT("admin"), pengembalian_controller.deletePengembalian);
+
+router.get("/log", authJWT("admin"), log.getLog);
 module.exports = router;

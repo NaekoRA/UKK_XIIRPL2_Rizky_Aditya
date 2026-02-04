@@ -1,0 +1,62 @@
+:root {
+  --primary: #4f46e5;
+  --secondary: #64748b;
+  --background: #f8fafc;
+  --card-bg: #ffffff;
+  --text: #1e293b;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--background);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background-color: var(--primary) !important;
+  border: none !important;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca !important;
+}
+
+.form-control {
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+}
+
+.form-control:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1) !important;
+}
+
+.sidebar {
+  background-color: #1e293b;
+  color: white;
+}
+
+.nav-link {
+  color: #cbd5e1 !important;
+}
+
+.nav-link.active {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+.nav-link:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.1);
+}

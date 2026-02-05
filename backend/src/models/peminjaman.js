@@ -47,6 +47,11 @@ const membatalkanPeminjaman = (id_data_peminjaman, id_peminjam, callback) => {
     koneksi.query(q, [id_data_peminjaman, id_peminjam], callback);
 };
 
+const ajukanPengembalian = (id_data_peminjaman, id_peminjam, callback) => {
+    const q = "UPDATE data_peminjaman SET status = 'menunggu_pengembalian' WHERE id = ? AND id_peminjam = ? AND status = 'disetujui';";
+    koneksi.query(q, [id_data_peminjaman, id_peminjam], callback);
+};
+
 const updatePeminjaman = (peminjamanId, alat_id, jumlah, callback) => {
     const q = `
         UPDATE peminjaman p
@@ -99,6 +104,7 @@ module.exports = {
     mengajukanPeminjaman,
     menyetujuiPeminjaman,
     membatalkanPeminjaman,
+    ajukanPengembalian,
     updatePeminjaman,
     updateDataPeminjaman,
     deletePeminjaman,

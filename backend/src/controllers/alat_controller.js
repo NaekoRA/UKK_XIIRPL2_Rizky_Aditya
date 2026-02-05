@@ -39,13 +39,20 @@ const createAlat = (req, res) => {
         return res.status(400).json({ error: "Nama alat, jumlah, harga, dan kategori harus diisi" });
     }
 
+    // Handle kategori_id whether it's an array (from frontend) or string
+    let kategoriIds = kategori_id;
+    if (typeof kategori_id === 'string' && kategori_id.includes(',')) {
+        kategoriIds = kategori_id.split(',').map(id => id.trim());
+    } else if (!Array.isArray(kategori_id)) {
+        kategoriIds = [kategori_id];
+    }
+
     alatModel.insertAlat(nama_alat, img, jumlah, harga, (err, results) => {
         if (err) return res.status(500).json({ error: "Gagal menambahkan alat", details: err });
 
         const alatId = results.insertId;
-        alatModel.addKategoriToAlat(alatId, kategori_id, (err, result) => {
+        alatModel.addKategoriToAlat(alatId, kategoriIds, (err, result) => {
             if (err) {
-                // Optionally: delete the created alat if category association fails, but for now just report error
                 return res.status(500).json({ error: "Gagal menambahkan kategori alat", details: err });
             }
             if (userId) logModel.insertLog(userId, "CREATE_ALAT", `Added alat: ${nama_alat}`, () => { });
@@ -61,6 +68,14 @@ const updateAlat = (req, res) => {
     const { nama_alat, jumlah, harga, kategori_id } = req.body;
     const userId = req.user ? req.user.id : null;
 
+    // Handle kategori_id whether it's an array or string
+    let kategoriIds = kategori_id;
+    if (typeof kategori_id === 'string' && kategori_id.includes(',')) {
+        kategoriIds = kategori_id.split(',').map(id => id.trim());
+    } else if (!Array.isArray(kategori_id) && kategori_id) {
+        kategoriIds = [kategori_id];
+    }
+
     // First check if alat exists and get current data to preserve image if not updated
     alatModel.checkAlatById(alatId, (err, results) => {
         if (err) return res.status(500).json({ message: "Error mengambil alat", error: err });
@@ -72,14 +87,10 @@ const updateAlat = (req, res) => {
         alatModel.updateAlat(alatId, nama_alat, img, jumlah, harga, (err, updateResults) => {
             if (err) return res.status(500).json({ message: "Gagal update alat", error: err });
 
-            // affectedRows might be 0 if data is identical, but we verified existence.
-            // However, model.updateAlat returns affectedRows.
-            // If we really want to be strict, we can check affectedRows, but since we verified presence, 0 just means no change.
-
-            alatModel.updateAlatKategori(alatId, kategori_id, (err, result) => {
+            alatModel.updateAlatKategori(alatId, kategoriIds, (err, result) => {
                 if (err) return res.status(500).json({ message: "Gagal update kategori alat", error: err });
                 if (userId) logModel.insertLog(userId, "UPDATE_ALAT", `Updated alat: ${nama_alat} (ID: ${alatId})`, () => { });
-                res.json({ message: "Alat berhasil diupdate", data: { id: alatId, nama_alat, img, jumlah, harga, kategori_id } });
+                res.json({ message: "Alat berhasil diupdate", data: { id: alatId, nama_alat, img, jumlah, harga, kategori_id: kategoriIds } });
             });
         });
     });

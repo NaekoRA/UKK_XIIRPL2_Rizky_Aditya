@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS data_peminjaman(
     id int primary key auto_increment,
     id_peminjam int not null,
     id_petugas int,
-    status enum('menunggu','disetujui','ditolak','dikembalikan','dibatalkan') default "menunggu",
+    status enum('menunggu','disetujui','ditolak','menunggu_pengembalian','dikembalikan','dibatalkan') default "menunggu",
     meminjam_pada DATETIME DEFAULT CURRENT_TIMESTAMP,
     digunakan_pada DATE ,
     alasan varchar(100),

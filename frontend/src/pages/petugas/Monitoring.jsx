@@ -6,12 +6,20 @@ const Monitoring = () => {
     const [loans, setLoans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedLoanId, setSelectedLoanId] = useState(null);
-    const [kondisi, setKondisi] = useState('baik');
+    const [loanItems, setLoanItems] = useState([]);
     const token = localStorage.getItem('token');
 
     useEffect(() => {
         fetchLoans();
     }, []);
+
+    useEffect(() => {
+        if (selectedLoanId) {
+            fetchLoanDetails(selectedLoanId);
+        } else {
+            setLoanItems([]);
+        }
+    }, [selectedLoanId]);
 
     const fetchLoans = async () => {
         try {
@@ -20,7 +28,9 @@ const Monitoring = () => {
             });
             const data = await response.json();
             // Filter only 'disetujui' for monitoring active loans
-            const active = data.filter(item => item.status === 'disetujui');
+            const active = data.filter(
+                item => !['dibatalkan', 'dikembalikan'].includes(item.status)
+            );
             setLoans(active);
             setLoading(false);
         } catch (error) {
@@ -29,35 +39,65 @@ const Monitoring = () => {
         }
     };
 
-    const handleReturn = async () => {
-        if (!selectedLoanId) return;
+    const fetchLoanDetails = async (id) => {
         try {
-            const idData = selectedLoanId;
-            const resItems = await fetch(`http://localhost:5000/api/peminjaman`, {
+            const response = await fetch(`http://localhost:5000/api/data/peminjaman/${id}/detail`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
-            const itemsList = await resItems.json();
-            const myItems = itemsList.filter(i => i.id_data_peminjaman == idData);
-
-            for (const item of myItems) {
-                await fetch("http://localhost:5000/api/pengembalian", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/x-www-form-urlencoded",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: new URLSearchParams({
-                        id_data_peminjaman: idData,
-                        id_alat: item.alat_id,
-                        kondisi: kondisi
-                    }).toString()
-                });
+            if (response.ok) {
+                const data = await response.json();
+                setLoanItems(data);
+            } else {
+                console.error("Failed to fetch details");
+                setLoanItems([]);
             }
+        } catch (error) {
+            console.error("Error fetch details:", error);
+            setLoanItems([]);
+        }
+    };
 
-            Swal.fire({ title: 'Berhasil dikembalikan', icon: 'success' });
-            fetchLoans();
+    const handleReturn = async (itemsFromModal) => {
+        if (!selectedLoanId) return;
+
+        try {
+            const urlEncodedData = new URLSearchParams();
+            urlEncodedData.append('id_data_peminjaman', selectedLoanId);
+
+            itemsFromModal.forEach((item, index) => {
+                urlEncodedData.append(`items[${index}][id_alat]`, item.id_alat);
+                urlEncodedData.append(`items[${index}][kondisi]`, item.kondisi);
+                if (item.kondisi === 'rusak') {
+                    urlEncodedData.append(`items[${index}][denda_manual]`, item.denda_manual);
+                }
+            });
+
+            const response = await fetch("http://localhost:5000/api/pengembalian", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: urlEncodedData.toString()
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                Swal.fire({
+                    title: 'Berhasil dikembalikan',
+                    text: `Total Denda: Rp ${result.total_denda.toLocaleString('id-ID')}`,
+                    icon: 'success'
+                });
+                fetchLoans();
+                // Reset selection
+                setSelectedLoanId(null);
+            } else {
+                Swal.fire({ title: 'Gagal', text: result.message || "Terjadi kesalahan", icon: 'error' });
+            }
         } catch (error) {
             console.error("Error return process:", error);
+            Swal.fire({ title: 'Error', text: "Terjadi kesalahan sistem", icon: 'error' });
         }
     };
 
@@ -86,11 +126,24 @@ const Monitoring = () => {
                                 <tr key={item.id}>
                                     <td>{item.id}</td>
                                     <td>{item.id_peminjam}</td>
-                                    <td>{new Date(item.di_pinjam_pada).toLocaleDateString()}</td>
-                                    <td>{new Date(item.pinjam_sampai).toLocaleDateString()}</td>
-                                    <td><span className="badge bg-success">Dipinjam</span></td>
+                                    <td>{new Date(item.meminjam_pada).toLocaleDateString()}</td>
                                     <td>
-                                        <button className="btn btn-info btn-sm" onClick={() => setSelectedLoanId(item.id)} data-bs-toggle="modal" data-bs-target="#returnModal">Proses Kembali</button>
+                                        {(() => {
+                                            const deadline = new Date(item.digunakan_pada);
+                                            deadline.setDate(deadline.getDate() + 3);
+                                            return deadline.toLocaleDateString();
+                                        })()}
+                                    </td>
+                                    <td>
+                                        {item.status === 'disetujui' && <span className="badge bg-success">Dipinjam</span>}
+                                        {item.status === 'menunggu_pengembalian' && <span className="badge bg-warning text-dark">Menunggu Pengembalian</span>}
+                                    </td>
+                                    <td>
+                                        {item.status === 'menunggu_pengembalian' ? (
+                                            <button className="btn btn-primary btn-sm" onClick={() => setSelectedLoanId(item.id)} data-bs-toggle="modal" data-bs-target="#returnModal">Proses Pengembalian</button>
+                                        ) : (
+                                            <span className="text-muted">Belum diajukan</span>
+                                        )}
                                     </td>
                                 </tr>
                             ))
@@ -98,6 +151,12 @@ const Monitoring = () => {
                     </tbody>
                 </table>
             </div>
+            <ModalMonitoringReturn
+                modalId="returnModal"
+                items={loanItems}
+                onSubmit={handleReturn}
+                onClose={() => setSelectedLoanId(null)}
+            />
         </div>
     );
 };

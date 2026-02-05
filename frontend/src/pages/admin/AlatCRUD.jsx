@@ -6,7 +6,7 @@ const AlatCRUD = () => {
     const [alat, setAlat] = useState([]);
     const [kategori, setKategori] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [formData, setFormData] = useState({ id: null, nama_alat: '', jumlah: 0, harga: 0, kategori_id: '', img: null });
+    const [formData, setFormData] = useState({ id: null, nama_alat: '', jumlah: 0, harga: 0, kategori_id: [], img: null });
     const token = localStorage.getItem('token');
 
     useEffect(() => {
@@ -38,7 +38,7 @@ const AlatCRUD = () => {
         data.append('nama_alat', formData.nama_alat);
         data.append('jumlah', formData.jumlah);
         data.append('harga', formData.harga);
-        data.append('kategori_id', formData.kategori_id);
+        data.append('kategori_id', formData.kategori_id.join(',')); // Send as comma separated for easy parsing if needed or handles by FormData
         if (formData.img instanceof File) {
             data.append('img', formData.img);
         }
@@ -52,7 +52,7 @@ const AlatCRUD = () => {
 
             if (response.ok) {
                 Swal.fire({ title: 'Berhasil!', icon: 'success' });
-                setFormData({ id: null, nama_alat: '', jumlah: 0, harga: 0, kategori_id: '', img: null });
+                setFormData({ id: null, nama_alat: '', jumlah: 0, harga: 0, kategori_id: [], img: null });
                 fetchAlat();
             }
         } catch (error) {
@@ -82,7 +82,7 @@ const AlatCRUD = () => {
         <div className="card p-4 shadow-sm">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="fw-bold mb-0">Manajemen Alat</h3>
-                <button className="btn btn-primary" onClick={() => setFormData({ id: null, nama_alat: '', jumlah: 0, harga: 0, kategori_id: '', img: null })} data-bs-toggle="modal" data-bs-target="#alatModal">
+                <button className="btn btn-primary" onClick={() => setFormData({ id: null, nama_alat: '', jumlah: 0, harga: 0, kategori_id: [], img: null })} data-bs-toggle="modal" data-bs-target="#alatModal">
                     <i className="bi bi-patch-plus me-2"></i>Tambah Alat
                 </button>
             </div>
@@ -108,7 +108,7 @@ const AlatCRUD = () => {
                                 <td>{item.jumlah}</td>
                                 <td>Rp {item.harga?.toLocaleString()}</td>
                                 <td>
-                                    <button className="btn btn-sm btn-outline-warning me-2" onClick={() => setFormData(item)} data-bs-toggle="modal" data-bs-target="#alatModal"><i className="bi bi-pencil"></i></button>
+                                    <button className="btn btn-sm btn-outline-warning me-2" onClick={() => setFormData({ ...item, kategori_id: item.kategori_ids })} data-bs-toggle="modal" data-bs-target="#alatModal"><i className="bi bi-pencil"></i></button>
                                     <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(item.id)}><i className="bi bi-trash"></i></button>
                                 </td>
                             </tr>

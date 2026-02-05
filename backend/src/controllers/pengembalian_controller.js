@@ -6,6 +6,10 @@ const kembalikanAlat = (req, res) => {
     const { id_data_peminjaman, items } = req.body; // items: [{id_alat, kondisi, denda_manual}]
     const userId = req.user ? req.user.id : null;
 
+    console.log(userId);
+    console.log(id_data_peminjaman);
+    console.log(items);
+
     if (!id_data_peminjaman || !items || !Array.isArray(items)) {
         return res.status(400).json({ message: "ID data peminjaman dan daftar items diperlukan" });
     }
@@ -16,11 +20,15 @@ const kembalikanAlat = (req, res) => {
         if (headerResults.length === 0) return res.status(404).json({ message: "Data peminjaman tidak ditemukan" });
 
         const header = headerResults[0];
-        const pinjamSampai = new Date(header.pinjam_sampai);
+        const tglDigunakan = new Date(header.digunakan_pada);
         const hariIni = new Date();
 
-        // Hitung keterlambatan hari
-        const diffTime = hariIni - pinjamSampai;
+        // Deadline adalah digunakan_pada + 3 hari
+        const deadline = new Date(tglDigunakan);
+        deadline.setDate(deadline.getDate() + 3);
+
+        // Hitung keterlambatan hari dari deadline
+        const diffTime = hariIni - deadline;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const lateDays = diffDays > 0 ? diffDays : 0;
 

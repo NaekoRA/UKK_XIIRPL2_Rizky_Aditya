@@ -16,11 +16,30 @@ const ModalAlat = ({ formData, setFormData, kategori, handleSubmit, modalId }) =
                                 <input type="text" className="form-control" value={formData.nama_alat} onChange={(e) => setFormData({ ...formData, nama_alat: e.target.value })} required />
                             </div>
                             <div className="mb-3">
-                                <label className="form-label">Kategori</label>
-                                <select className="form-control" value={formData.kategori_id} onChange={(e) => setFormData({ ...formData, kategori_id: e.target.value })} required>
-                                    <option value="">Pilih Kategori</option>
-                                    {kategori.map(k => <option key={k.id} value={k.id}>{k.nama_kategori}</option>)}
-                                </select>
+                                <label className="form-label d-block">Kategori</label>
+                                <div className="border rounded p-2" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                                    {kategori.map(k => (
+                                        <div key={k.id} className="form-check">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id={`kat-${k.id}`}
+                                                value={k.id}
+                                                checked={formData.kategori_id.includes(k.id)}
+                                                onChange={(e) => {
+                                                    const id = parseInt(e.target.value);
+                                                    const newKategori = e.target.checked
+                                                        ? [...formData.kategori_id, id]
+                                                        : formData.kategori_id.filter(val => val !== id);
+                                                    setFormData({ ...formData, kategori_id: newKategori });
+                                                }}
+                                            />
+                                            <label className="form-check-label" htmlFor={`kat-${k.id}`}>
+                                                {k.nama_kategori}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                             <div className="row">
                                 <div className="col-6 mb-3">

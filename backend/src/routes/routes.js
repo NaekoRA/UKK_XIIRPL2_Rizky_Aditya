@@ -33,6 +33,7 @@ router.delete("/alat/:id", authJWT("admin"), alat_controller.deleteAlat);
 router.get("/data/peminjaman", authJWT("petugas"), peminjaman_controller.getAllDataPeminjaman);
 router.get("/data/peminjamanku", authJWT(), peminjaman_controller.getdatapeminjamanById);
 router.put("/data/peminjaman/:id", authJWT("petugas"), peminjaman_controller.updateDataPeminjaman);
+router.get("/data/peminjaman/:id/detail", authJWT("petugas"), peminjaman_controller.getDetailDataPeminjaman);
 router.delete("/data/peminjaman/:id", authJWT("admin"), peminjaman_controller.deleteDataPeminjaman);
 
 router.get("/peminjaman", authJWT(), peminjaman_controller.getAllPeminjaman);
@@ -41,11 +42,12 @@ router.post("/peminjaman", authJWT("peminjam"), peminjaman_controller.mengajukan
 router.post("/peminjaman/approve", authJWT("petugas"), peminjaman_controller.menyetujuiPeminjaman);
 router.put("/peminjaman/:id", authJWT("peminjam"), peminjaman_controller.updatePeminjaman);
 router.put("/peminjaman/membatalkan/:id", authJWT("peminjam"), peminjaman_controller.membatalkanPeminjaman);
+router.post("/peminjaman/ajukan-pengembalian", authJWT("peminjam"), peminjaman_controller.ajukanPengembalian);
 router.delete("/peminjaman/:id", authJWT("admin"), peminjaman_controller.deletePeminjaman);
 
 router.get("/pengembalian", pengembalian_controller.getAllPengembalian);
 router.get("/pengembalian/:id", pengembalian_controller.getPengembalianById);
-router.post("/pengembalian", authJWT("peminjam"), pengembalian_controller.kembalikanAlat);
+router.post("/pengembalian", authJWT("petugas"), pengembalian_controller.kembalikanAlat);
 router.put("/pengembalian/:id", authJWT("admin"), pengembalian_controller.updatePengembalian);
 router.delete("/pengembalian/:id", authJWT("admin"), pengembalian_controller.deletePengembalian);
 

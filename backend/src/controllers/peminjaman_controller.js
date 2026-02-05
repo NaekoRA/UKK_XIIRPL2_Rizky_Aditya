@@ -36,10 +36,40 @@ const getdatapeminjamanById = (req, res) => {
     });
 };
 
+const getDetailDataPeminjaman = (req, res) => {
+    const id = req.params.id;
+    peminjamanModel.getPeminjamanWithAlat(id, (err, results) => {
+        if (err) return res.status(500).json({ message: "Error mengambil detail peminjaman", error: err });
+        if (results.length === 0) return res.status(404).json({ message: "Detail peminjaman tidak ditemukan" });
+        res.json(results);
+    });
+};
+
+const ajukanPengembalian = (req, res) => {
+    const id_peminjam = req.user.id;
+    const { id_data_peminjaman } = req.body;
+
+    if (!id_data_peminjaman) {
+        return res.status(400).json({ message: "ID data peminjaman diperlukan" });
+    }
+
+    peminjamanModel.ajukanPengembalian(id_data_peminjaman, id_peminjam, (err, result) => {
+        if (err) return res.status(500).json({ message: "Error mengajukan pengembalian", error: err });
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Peminjaman tidak ditemukan atau tidak dapat dikembalikan" });
+        }
+
+        logModel.insertLog(id_peminjam, 'mengajukan pengembalian', (logErr) => {
+            if (logErr) console.error("Error log:", logErr);
+        });
+
+        res.json({ message: "Pengembalian berhasil diajukan, menunggu verifikasi petugas" });
+    });
+};
 
 const mengajukanPeminjaman = (req, res) => {
     const id_peminjam = req.user.id;
-    let { alat_id, jumlah, pinjam_sampai, alasan } = req.body;
+    let { alat_id, jumlah, digunakan_pada, alasan } = req.body;
 
     // pastikan array
     if (!Array.isArray(alat_id)) {
@@ -60,7 +90,7 @@ const mengajukanPeminjaman = (req, res) => {
             total_harga += price * jumlah[index];
         });
 
-        peminjamanModel.postDataPeminjaman(id_peminjam, pinjam_sampai, alasan, total_harga, (err, result) => {
+        peminjamanModel.postDataPeminjaman(id_peminjam, digunakan_pada, alasan, total_harga, (err, result) => {
             if (err) return res.status(500).json({ message: err.message });
 
             const id_data_peminjaman = result.insertId;
@@ -171,6 +201,7 @@ module.exports = {
     mengajukanPeminjaman,
     menyetujuiPeminjaman,
     membatalkanPeminjaman,
+    ajukanPengembalian,
     updatePeminjaman,
     updateDataPeminjaman,
     deletePeminjaman,
@@ -179,6 +210,7 @@ module.exports = {
     getAllDataPeminjaman,
     getpeminjamanById,
     getdatapeminjamanById,
+    getDetailDataPeminjaman,
 };
 
 

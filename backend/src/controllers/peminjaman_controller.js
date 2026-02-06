@@ -59,7 +59,7 @@ const ajukanPengembalian = (req, res) => {
             return res.status(404).json({ message: "Peminjaman tidak ditemukan atau tidak dapat dikembalikan" });
         }
 
-        logModel.insertLog(id_peminjam, 'mengajukan pengembalian', (logErr) => {
+        logModel.insertLog(id_peminjam, 'PENGEMBALIAN_REQUEST', `Requested return for loan ID: ${id_data_peminjaman}`, (logErr) => {
             if (logErr) console.error("Error log:", logErr);
         });
 

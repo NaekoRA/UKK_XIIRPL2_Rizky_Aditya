@@ -20,6 +20,11 @@ const getDataPeminjamanById = (id_peminjam, callback) => {
     koneksi.query(q, [id_peminjam], callback);
 };
 
+const getDataPeminjamanByPk = (id, callback) => {
+    const q = "SELECT * FROM data_peminjaman WHERE id = ?";
+    koneksi.query(q, [id], callback);
+};
+
 
 const postDataPeminjaman = (id_peminjam, digunakan_pada, alasan, total_harga, callback) => {
     const q = `
@@ -100,6 +105,7 @@ module.exports = {
     getAllDataPeminjaman,
     getPeminjamanById,
     getDataPeminjamanById,
+    getDataPeminjamanByPk,
     postDataPeminjaman,
     mengajukanPeminjaman,
     menyetujuiPeminjaman,

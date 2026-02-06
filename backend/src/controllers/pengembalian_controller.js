@@ -3,21 +3,31 @@ const logModel = require("../models/log_model");
 const peminjamanModel = require("../models/peminjaman");
 
 const kembalikanAlat = (req, res) => {
-    const { id_data_peminjaman, items } = req.body; // items: [{id_alat, kondisi, denda_manual}]
-    const userId = req.user ? req.user.id : null;
+    let { id_data_peminjaman, items } = req.body; // items: [{id_alat, kondisi, denda_manual}]
+    const userId = req.user.id;
 
-    console.log(userId);
-    console.log(id_data_peminjaman);
-    console.log(items);
+    // Normalize items to array (handle qs parsing object issue)
+    if (items) {
+        if (Array.isArray(items)) {
+            // Already array
+        } else if (typeof items === 'object') {
+            items = Object.values(items);
+        }
+    }
 
     if (!id_data_peminjaman || !items || !Array.isArray(items)) {
         return res.status(400).json({ message: "ID data peminjaman dan daftar items diperlukan" });
     }
 
     // 1. Ambil data header peminjaman (untuk cek tanggal kembali)
-    peminjamanModel.getDataPeminjamanById(id_data_peminjaman, (err, headerResults) => {
-        if (err) return res.status(500).json({ message: "Error ambil data peminjaman", error: err });
-        if (headerResults.length === 0) return res.status(404).json({ message: "Data peminjaman tidak ditemukan" });
+    peminjamanModel.getDataPeminjamanByPk(id_data_peminjaman, (err, headerResults) => {
+        if (err) {
+            return res.status(500).json({ message: "Error ambil data peminjaman", error: err });
+        }
+
+        if (!headerResults || headerResults.length === 0) {
+            return res.status(404).json({ message: "Data peminjaman tidak ditemukan" });
+        }
 
         const header = headerResults[0];
         const tglDigunakan = new Date(header.digunakan_pada);
@@ -34,7 +44,9 @@ const kembalikanAlat = (req, res) => {
 
         // 2. Ambil detail barang yang dipinjam (untuk harga)
         peminjamanModel.getPeminjamanWithAlat(id_data_peminjaman, (err, detailResults) => {
-            if (err) return res.status(500).json({ message: "Error ambil detail alat", error: err });
+            if (err) {
+                return res.status(500).json({ message: "Error ambil detail alat", error: err });
+            }
 
             const toolMap = {};
             detailResults.forEach(d => toolMap[d.alat_id] = d);
@@ -43,8 +55,9 @@ const kembalikanAlat = (req, res) => {
             let errors = [];
             let processedItems = 0;
 
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 const toolDetail = toolMap[item.id_alat];
+
                 if (!toolDetail) {
                     errors.push(`Alat ID ${item.id_alat} tidak ditemukan dalam peminjaman ini`);
                     processedItems++;
@@ -57,8 +70,6 @@ const kembalikanAlat = (req, res) => {
                 const jumlah = toolDetail.jumlah;
 
                 // A. Hitung Denda Keterlambatan per barang
-                // (10% harga barang / hari, minimal denda 30k)
-                // Denda hanya dikenakan jika telat lebih dari 3 hari (sesuai permintaan user)
                 if (lateDays > 3) {
                     const lateFineCalculated = 0.1 * harga * lateDays;
                     dendaItem += Math.max(lateFineCalculated, 30000);
@@ -69,16 +80,16 @@ const kembalikanAlat = (req, res) => {
                     dendaItem += (item.denda_manual || 0);
                 } else if (item.kondisi === 'hilang/rusak_total') {
                     dendaItem += (harga * jumlah);
-                } else if (item.kondisi === 'baik') {
-                    // dendaItem += 0;
                 }
 
                 totalDenda += dendaItem;
 
                 // C. Simpan ke tabel pengembalian
                 pengembalianModel.insertPengembalian(id_data_peminjaman, item.id_alat, item.kondisi, (err) => {
+                    if (err) {
+                        errors.push(err.message);
+                    }
                     processedItems++;
-                    if (err) errors.push(err.message);
                     returnCheck();
                 });
             });
@@ -91,9 +102,12 @@ const kembalikanAlat = (req, res) => {
 
                     // 3. Update status dan total denda di header
                     pengembalianModel.updateStatusPeminjaman(id_data_peminjaman, totalDenda, (err) => {
-                        if (err) return res.status(500).json({ message: "Gagal update status & denda", error: err });
+                        if (err) {
+                            return res.status(500).json({ message: "Gagal update status & denda", error: err });
+                        }
 
                         if (userId) logModel.insertLog(userId, "PENGEMBALIAN", `Processed return for loan ID: ${id_data_peminjaman}`, () => { });
+
                         res.status(200).json({
                             message: "Alat berhasil dikembalikan",
                             total_denda: totalDenda,

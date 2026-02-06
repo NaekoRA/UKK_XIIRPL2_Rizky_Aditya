@@ -155,7 +155,7 @@ const CreateTriggerTambahStok = (koneksi) => {
     AFTER UPDATE ON data_peminjaman
     FOR EACH ROW
     BEGIN
-        IF OLD.status = 'disetujui' AND NEW.status = 'dikembalikan' THEN
+        IF OLD.status = 'menunggu_pengembalian' AND NEW.status = 'dikembalikan' THEN
             UPDATE alat a
             JOIN peminjaman p ON p.alat_id = a.id
             SET a.jumlah = a.jumlah + p.jumlah

@@ -45,8 +45,7 @@ const ModalMonitoringReturn = ({ modalId, items, onClose, onSubmit }) => {
         return total;
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const handleSubmit = () => {
         onSubmit(itemStates);
     };
 
@@ -58,61 +57,59 @@ const ModalMonitoringReturn = ({ modalId, items, onClose, onSubmit }) => {
                         <h5 className="modal-title">Proses Pengembalian</h5>
                         <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" onClick={onClose}></button>
                     </div>
-                    <form onSubmit={handleSubmit}>
-                        <div className="modal-body">
-                            <div className="table-responsive">
-                                <table className="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Alat</th>
-                                            <th>Jumlah</th>
-                                            <th>Kondisi</th>
-                                            <th>Denda Tambahan</th>
+                    <div className="modal-body">
+                        <div className="table-responsive">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Alat</th>
+                                        <th>Jumlah</th>
+                                        <th>Kondisi</th>
+                                        <th>Denda Tambahan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {itemStates.map((item, index) => (
+                                        <tr key={index}>
+                                            <td>{item.nama_alat}</td>
+                                            <td>{item.jumlah}</td>
+                                            <td>
+                                                <select
+                                                    className="form-control form-control-sm"
+                                                    value={item.kondisi}
+                                                    onChange={(e) => handleConditionChange(index, e.target.value)}
+                                                >
+                                                    <option value="baik">Baik (Normal)</option>
+                                                    <option value="rusak">Rusak (Denda Manual)</option>
+                                                    <option value="hilang/rusak_total">Hilang / Rusak Total (Full Harga)</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    className="form-control form-control-sm"
+                                                    value={item.denda_manual}
+                                                    onChange={(e) => handleDendaChange(index, e.target.value)}
+                                                    disabled={item.kondisi !== 'rusak'}
+                                                    min="0"
+                                                    placeholder="Nominal Denda"
+                                                />
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {itemStates.map((item, index) => (
-                                            <tr key={index}>
-                                                <td>{item.nama_alat}</td>
-                                                <td>{item.jumlah}</td>
-                                                <td>
-                                                    <select
-                                                        className="form-control form-control-sm"
-                                                        value={item.kondisi}
-                                                        onChange={(e) => handleConditionChange(index, e.target.value)}
-                                                    >
-                                                        <option value="baik">Baik (Normal)</option>
-                                                        <option value="rusak">Rusak (Denda Manual)</option>
-                                                        <option value="hilang/rusak_total">Hilang / Rusak Total (Full Harga)</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <input
-                                                        type="number"
-                                                        className="form-control form-control-sm"
-                                                        value={item.denda_manual}
-                                                        onChange={(e) => handleDendaChange(index, e.target.value)}
-                                                        disabled={item.kondisi !== 'rusak'}
-                                                        min="0"
-                                                        placeholder="Nominal Denda"
-                                                    />
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="alert alert-info py-2 mt-3">
-                                <strong>Estimasi Denda Kondisi: </strong> Rp {calculateTotalFine().toLocaleString('id-ID')}
-                                <br />
-                                <small className="text-muted">*Belum termasuk denda keterlambatan (dihitung otomatis oleh sistem)</small>
-                            </div>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={onClose}>Batal</button>
-                            <button type="submit" className="btn btn-primary" data-bs-dismiss="modal">Proses Semua</button>
+                        <div className="alert alert-info py-2 mt-3">
+                            <strong>Estimasi Denda Kondisi: </strong> Rp {calculateTotalFine().toLocaleString('id-ID')}
+                            <br />
+                            <small className="text-muted">*Belum termasuk denda keterlambatan (dihitung otomatis oleh sistem)</small>
                         </div>
-                    </form>
+                    </div>
+                    <div className="modal-footer">
+                        <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={onClose}>Batal</button>
+                        <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={handleSubmit}>Proses Semua</button>
+                    </div>
                 </div>
             </div>
         </div>

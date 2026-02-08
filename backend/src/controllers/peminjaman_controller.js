@@ -71,13 +71,11 @@ const mengajukanPeminjaman = (req, res) => {
     const id_peminjam = req.user.id;
     let { alat_id, jumlah, digunakan_pada, alasan } = req.body;
 
-    // pastikan array
     if (!Array.isArray(alat_id)) {
         alat_id = [alat_id];
         jumlah = [jumlah];
     }
 
-    // Ambil harga alat untuk hitung total_harga
     alatModel.getAllAlat((err, tools) => {
         if (err) return res.status(500).json({ message: "Error mengambil data alat", error: err });
 

@@ -6,7 +6,18 @@ const getAllPeminjaman = (callback) => {
 };
 
 const getAllDataPeminjaman = (callback) => {
-    const q = "SELECT * FROM data_peminjaman";
+    const q = `
+        SELECT dp.*, u.username as nama_peminjam,
+        MAX(kem.di_kembalikan_pada) as di_kembalikan_pada,
+        GROUP_CONCAT(CONCAT(a.nama_alat, ' (', COALESCE(kem.kondisi, 'Dipinjam'), ')') SEPARATOR ', ') as kondisi_barang
+        FROM data_peminjaman dp
+        LEFT JOIN users u ON dp.id_peminjam = u.id
+        JOIN peminjaman p ON dp.id = p.id_data_peminjaman
+        JOIN alat a ON p.alat_id = a.id
+        LEFT JOIN pengembalian kem ON (dp.id = kem.id_data_peminjaman AND p.alat_id = kem.id_alat)
+        GROUP BY dp.id
+        ORDER BY dp.created_at DESC
+    `;
     koneksi.query(q, callback);
 };
 

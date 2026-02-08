@@ -32,7 +32,6 @@ const Login = () => {
                     showConfirmButton: false
                 });
 
-                // Redirect based on role
                 if (data.role === 'admin') navigate("/admin");
                 else if (data.role === 'petugas') navigate("/petugas");
                 else navigate("/peminjam");

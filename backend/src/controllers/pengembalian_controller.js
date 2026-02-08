@@ -6,10 +6,8 @@ const kembalikanAlat = (req, res) => {
     let { id_data_peminjaman, items } = req.body; // items: [{id_alat, kondisi, denda_manual}]
     const userId = req.user.id;
 
-    // Normalize items to array (handle qs parsing object issue)
     if (items) {
         if (Array.isArray(items)) {
-            // Already array
         } else if (typeof items === 'object') {
             items = Object.values(items);
         }
@@ -19,7 +17,6 @@ const kembalikanAlat = (req, res) => {
         return res.status(400).json({ message: "ID data peminjaman dan daftar items diperlukan" });
     }
 
-    // 1. Ambil data header peminjaman (untuk cek tanggal kembali)
     peminjamanModel.getDataPeminjamanByPk(id_data_peminjaman, (err, headerResults) => {
         if (err) {
             return res.status(500).json({ message: "Error ambil data peminjaman", error: err });
@@ -33,16 +30,13 @@ const kembalikanAlat = (req, res) => {
         const tglDigunakan = new Date(header.digunakan_pada);
         const hariIni = new Date();
 
-        // Deadline adalah digunakan_pada + 3 hari
         const deadline = new Date(tglDigunakan);
         deadline.setDate(deadline.getDate() + 3);
 
-        // Hitung keterlambatan hari dari deadline
         const diffTime = hariIni - deadline;
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const lateDays = diffDays > 0 ? diffDays : 0;
 
-        // 2. Ambil detail barang yang dipinjam (untuk harga)
         peminjamanModel.getPeminjamanWithAlat(id_data_peminjaman, (err, detailResults) => {
             if (err) {
                 return res.status(500).json({ message: "Error ambil detail alat", error: err });
@@ -69,13 +63,11 @@ const kembalikanAlat = (req, res) => {
                 const harga = toolDetail.harga;
                 const jumlah = toolDetail.jumlah;
 
-                // A. Hitung Denda Keterlambatan per barang
-                if (lateDays > 3) {
+                if (lateDays > 0) {
                     const lateFineCalculated = 0.1 * harga * lateDays;
                     dendaItem += Math.max(lateFineCalculated, 30000);
                 }
 
-                // B. Hitung Denda Kondisi
                 if (item.kondisi === 'rusak') {
                     dendaItem += (item.denda_manual || 0);
                 } else if (item.kondisi === 'hilang/rusak_total') {
@@ -84,7 +76,6 @@ const kembalikanAlat = (req, res) => {
 
                 totalDenda += dendaItem;
 
-                // C. Simpan ke tabel pengembalian
                 pengembalianModel.insertPengembalian(id_data_peminjaman, item.id_alat, item.kondisi, (err) => {
                     if (err) {
                         errors.push(err.message);

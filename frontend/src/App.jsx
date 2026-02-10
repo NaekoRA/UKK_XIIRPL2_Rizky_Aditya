@@ -8,6 +8,7 @@ import Layout from './layouts/Layout';
 // Peminjam Pages
 import DaftarAlat from './pages/peminjam/DaftarAlat';
 import PeminjamanSaya from './pages/peminjam/PeminjamanSaya';
+import SnK from './pages/peminjam/S&K';
 
 // Petugas Pages
 import Approval from './pages/petugas/Approval';
@@ -18,24 +19,20 @@ import Laporan from './pages/petugas/Laporan';
 import UserCRUD from './pages/admin/UserCRUD';
 import AlatCRUD from './pages/admin/AlatCRUD';
 import KategoriCRUD from './pages/admin/KategoriCRUD';
+import PeminjamanCRUD from './pages/admin/PeminjamanCRUD';
 import LogAktivitas from './pages/admin/LogAktivitas';
+import Dashboard from './pages/Dashboard';
+import PengembalianCRUD from './pages/admin/PengembalianCRUD';
 
-const Dashboard = ({ role }) => (
-    <div className="card glass p-5 text-white text-center">
-        <h2 className="fw-bold mb-3">Selamat Datang, {role}!</h2>
-        <p className="text-muted">NaekoRa_RentCost</p>
-        <div className="mt-4">
-            <i className="bi bi-shield-check display-1 text-primary"></i>
-        </div>
-    </div>
-);
 
 const App = () => {
     return (
         <Router>
             <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+                <Route element={<PrivateRoute guestOnly={true} />}>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                </Route>
 
                 {/* Admin Routes */}
                 <Route element={<PrivateRoute allowedRoles={['admin']} />}>
@@ -44,8 +41,8 @@ const App = () => {
                         <Route path="users" element={<UserCRUD />} />
                         <Route path="alat" element={<AlatCRUD />} />
                         <Route path="kategori" element={<KategoriCRUD />} />
-                        <Route path="peminjaman" element={<Approval />} /> {/* Reusing Approval for now */}
-                        <Route path="pengembalian" element={<Monitoring />} /> {/* Reusing Monitoring for now */}
+                        <Route path="peminjaman" element={<PeminjamanCRUD />} />
+                        <Route path="pengembalian" element={<PengembalianCRUD />} />
                         <Route path="log" element={<LogAktivitas />} />
                     </Route>
                 </Route>
@@ -66,6 +63,7 @@ const App = () => {
                         <Route index element={<Dashboard role="Peminjam" />} />
                         <Route path="alat" element={<DaftarAlat />} />
                         <Route path="status" element={<PeminjamanSaya />} />
+                        <Route path="snk" element={<SnK />} />
                     </Route>
                 </Route>
 

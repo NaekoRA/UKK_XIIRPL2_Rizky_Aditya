@@ -1,5 +1,6 @@
 import Swal from 'sweetalert2';
 import ModalMonitoringReturn from '../../components/modals/ModalMonitoringReturn';
+import ModalDetailPeminjaman from '../../components/modals/ModalDetailPeminjaman';
 
 import { useEffect, useState } from 'react';
 const Monitoring = () => {
@@ -23,15 +24,11 @@ const Monitoring = () => {
 
     const fetchLoans = async () => {
         try {
-            const response = await fetch("http://localhost:5000/api/data/peminjaman", {
+            const response = await fetch("http://localhost:5000/api/monitoring", {
                 headers: { "Authorization": `Bearer ${token}` }
             });
             const data = await response.json();
-            // Filter only 'disetujui' for monitoring active loans
-            const active = data.filter(
-                item => !['dibatalkan', 'dikembalikan'].includes(item.status)
-            );
-            setLoans(active);
+            setLoans(data);
             setLoading(false);
         } catch (error) {
             console.error("Error fetch loans:", error);
@@ -125,7 +122,7 @@ const Monitoring = () => {
                             loans.map((item) => (
                                 <tr key={item.id}>
                                     <td>{item.id}</td>
-                                    <td>{item.id_peminjam}</td>
+                                    <td>{item.nama_peminjam}</td>
                                     <td>{new Date(item.meminjam_pada).toLocaleDateString()}</td>
                                     <td>
                                         {(() => {
@@ -139,11 +136,16 @@ const Monitoring = () => {
                                         {item.status === 'menunggu_pengembalian' && <span className="badge bg-warning text-dark">Menunggu Pengembalian</span>}
                                     </td>
                                     <td>
-                                        {item.status === 'menunggu_pengembalian' ? (
-                                            <button className="btn btn-primary btn-sm" onClick={() => setSelectedLoanId(item.id)} data-bs-toggle="modal" data-bs-target="#returnModal">Proses Pengembalian</button>
-                                        ) : (
-                                            <span className="text-muted">Belum diajukan</span>
-                                        )}
+                                        <div className="d-flex gap-2">
+                                            <button className="btn btn-info btn-sm text-white" onClick={() => setSelectedLoanId(item.id)} data-bs-toggle="modal" data-bs-target="#detailModal">
+                                                <i className="bi bi-eye"></i> Detail
+                                            </button>
+                                            {item.status === 'menunggu_pengembalian' && (
+                                                <button className="btn btn-primary btn-sm" onClick={() => setSelectedLoanId(item.id)} data-bs-toggle="modal" data-bs-target="#returnModal">
+                                                    Proses Pengembalian
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -156,6 +158,10 @@ const Monitoring = () => {
                 items={loanItems}
                 onSubmit={handleReturn}
                 onClose={() => setSelectedLoanId(null)}
+            />
+            <ModalDetailPeminjaman
+                modalId="detailModal"
+                detail={loanItems}
             />
         </div>
     );

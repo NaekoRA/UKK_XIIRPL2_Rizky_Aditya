@@ -15,8 +15,12 @@ const authJWT = (role = null) => {
             const decoded = jwt.verify(token, secretKey);
             req.user = decoded;
 
-            if (role && decoded.role !== role) {
-                return res.status(403).json({ message: "Akses ditolak" });
+            // Support both single role (string) and multiple roles (array)
+            if (role) {
+                const allowedRoles = Array.isArray(role) ? role : [role];
+                if (!allowedRoles.includes(decoded.role) && decoded.role !== 'admin') {
+                    return res.status(403).json({ message: "Akses ditolak" });
+                }
             }
 
             next();

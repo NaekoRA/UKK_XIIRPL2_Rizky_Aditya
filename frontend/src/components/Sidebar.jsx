@@ -45,6 +45,7 @@ const Sidebar = () => {
             { name: 'Dashboard', path: '/peminjam', icon: 'bi-speedometer2' },
             { name: 'Daftar Alat', path: '/peminjam/alat', icon: 'bi-box-seam' },
             { name: 'Peminjaman Saya', path: '/peminjam/status', icon: 'bi-clock-history' },
+            { name: 'Syarat & Ketentuan', path: '/peminjam/snk', icon: 'bi-file-earmark-text' },
         ]
     };
 
@@ -54,7 +55,7 @@ const Sidebar = () => {
         <div className="d-flex flex-column flex-shrink-0 p-3 sidebar h-100" style={{ width: '280px' }}>
             <div className="mb-4 text-center">
                 <h4 className="fw-bold mb-0">NaekoRa_RentCost</h4>
-                <small className="text-muted text-uppercase">{role}</small>
+                <small className="text-primary">{role}</small>
             </div>
             <hr />
             <ul className="nav nav-pills flex-column mb-auto">

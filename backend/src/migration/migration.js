@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS peminjaman(
 );`; koneksi.query(q, log("peminjaman"))
 }
 
+
 const CreatePengembalianTable = (koneksi) => {
     const q = `
 CREATE TABLE IF NOT EXISTS pengembalian(
@@ -129,49 +130,89 @@ CREATE TABLE IF NOT EXISTS pengembalian(
 );`; koneksi.query(q, log("pengembalian"))
 }
 
-const CreateTriggerKurangiStok = (koneksi) => {
+const CreateKeranjangTable = (koneksi) => {
     const q = `
-    CREATE TRIGGER IF NOT EXISTS kurangi_stok
-    AFTER UPDATE ON data_peminjaman
-    FOR EACH ROW
-    BEGIN
-        IF OLD.status = 'menunggu' AND NEW.status = 'disetujui' THEN
-            UPDATE alat a
-            JOIN peminjaman p ON p.alat_id = a.id
-            SET a.jumlah = a.jumlah - p.jumlah
-            WHERE p.id_data_peminjaman = NEW.id;
-        END IF;
-    END;
-    `;
-    koneksi.query(q, (err) => {
-        if (err) console.error("❌ Trigger kurangi stok gagal", err);
-        else console.log("✅ Trigger kurangi stok aktif");
+CREATE TABLE IF NOT EXISTS keranjang(
+    id int primary key auto_increment,
+    user_id int not null,
+    alat_id int not null,
+    jumlah int not null,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    foreign key(user_id) references users(id) ON DELETE CASCADE,
+    foreign key(alat_id) references alat(id) ON DELETE CASCADE
+); `; koneksi.query(q, log("keranjang"))
+}
+
+const CreateTriggerKurangiStok = (koneksi) => {
+    koneksi.query("DROP TRIGGER IF EXISTS kurangi_stok", () => {
+        const q = `
+        CREATE TRIGGER kurangi_stok
+        AFTER UPDATE ON data_peminjaman
+        FOR EACH ROW
+BEGIN
+            IF OLD.status = 'menunggu' AND NEW.status = 'disetujui' THEN
+                UPDATE alat a
+                JOIN peminjaman p ON p.alat_id = a.id
+                SET a.jumlah = a.jumlah - p.jumlah
+                WHERE p.id_data_peminjaman = NEW.id;
+            END IF;
+END;
+`;
+        koneksi.query(q, (err) => {
+            if (err) console.error("❌ Trigger kurangi stok gagal", err);
+            else console.log("✅ Trigger kurangi stok aktif");
+        });
     });
 };
 
 const CreateTriggerTambahStok = (koneksi) => {
-    const q = `
-    CREATE TRIGGER IF NOT EXISTS tambah_stok
-    AFTER UPDATE ON data_peminjaman
-    FOR EACH ROW
-    BEGIN
-        IF OLD.status = 'menunggu_pengembalian' AND NEW.status = 'dikembalikan' THEN
-            UPDATE alat a
-            JOIN peminjaman p ON p.alat_id = a.id
-            SET a.jumlah = a.jumlah + p.jumlah
-            WHERE p.id_data_peminjaman = NEW.id;
-        END IF;
-    END;
-    `;
-    koneksi.query(q, (err) => {
-        if (err) console.error("❌ Trigger tambah stok gagal", err);
-        else console.log("✅ Trigger tambah stok aktif");
+    koneksi.query("DROP TRIGGER IF EXISTS tambah_stok", () => {
+        const q = `
+        CREATE TRIGGER tambah_stok
+        AFTER UPDATE ON data_peminjaman
+        FOR EACH ROW
+BEGIN
+IF(OLD.status = 'menunggu_pengembalian' OR OLD.status = 'disetujui') AND NEW.status = 'dikembalikan' THEN
+                UPDATE alat a
+                JOIN peminjaman p ON p.alat_id = a.id
+                SET a.jumlah = a.jumlah + p.jumlah
+                WHERE p.id_data_peminjaman = NEW.id;
+            END IF;
+END;
+`;
+        koneksi.query(q, (err) => {
+            if (err) console.error("❌ Trigger tambah stok gagal", err);
+            else console.log("✅ Trigger tambah stok aktif");
+        });
+    });
+};
+
+const CreateTriggerBatalStok = (koneksi) => {
+    koneksi.query("DROP TRIGGER IF EXISTS batal_stok", () => {
+        const q = `
+        CREATE TRIGGER batal_stok
+        AFTER UPDATE ON data_peminjaman
+        FOR EACH ROW
+BEGIN
+IF(OLD.status = 'disetujui' OR OLD.status = 'menunggu_pengembalian') AND NEW.status = 'dibatalkan' THEN
+                UPDATE alat a
+                JOIN peminjaman p ON p.alat_id = a.id
+                SET a.jumlah = a.jumlah + p.jumlah
+                WHERE p.id_data_peminjaman = NEW.id;
+            END IF;
+END;
+`;
+        koneksi.query(q, (err) => {
+            if (err) console.error("❌ Trigger batal stok gagal", err);
+            else console.log("✅ Trigger batal stok aktif");
+        });
     });
 };
 
 
 const log = (name) => (err) => {
-    if (err) return console.error(`❌ Gagal membuat tabel ${name}`, err);
+    if (err) return console.error(`❌ Gagal membuat tabel ${name} `, err);
     console.log(`✅ Tabel ${name} siap`);
 };
 
@@ -194,10 +235,12 @@ const migration = () => {
             CreateDataPeminjamanTable(koneksi);
             CreatePeminjamanTable(koneksi);
             CreatePengembalianTable(koneksi);
+            CreateKeranjangTable(koneksi);
             CreateLogAktivitasTable(koneksi);
 
             CreateTriggerKurangiStok(koneksi);
             CreateTriggerTambahStok(koneksi);
+            CreateTriggerBatalStok(koneksi);
 
             koneksiMysql.end();
         });

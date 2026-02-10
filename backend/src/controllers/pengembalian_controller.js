@@ -3,8 +3,9 @@ const logModel = require("../models/log_model");
 const peminjamanModel = require("../models/peminjaman");
 
 const kembalikanAlat = (req, res) => {
-    let { id_data_peminjaman, items } = req.body; // items: [{id_alat, kondisi, denda_manual}]
+    let { id_data_peminjaman, items } = req.body;
     const userId = req.user.id;
+
 
     if (items) {
         if (Array.isArray(items)) {
@@ -49,6 +50,19 @@ const kembalikanAlat = (req, res) => {
             let errors = [];
             let processedItems = 0;
 
+            // 1. Calculate late fees only once per unique tool type to avoid duplication from flattened items
+            const uniqueToolIds = [...new Set(detailResults.map(d => d.alat_id))];
+            if (lateDays > 0) {
+                uniqueToolIds.forEach(alatId => {
+                    const tool = toolMap[alatId];
+                    if (tool) {
+                        const lateFineCalculated = 0.1 * tool.harga * lateDays;
+                        totalDenda += Math.max(lateFineCalculated, 30000);
+                    }
+                });
+            }
+
+            // 2. Process each individual item for condition-based fines
             items.forEach((item, index) => {
                 const toolDetail = toolMap[item.id_alat];
 
@@ -59,22 +73,16 @@ const kembalikanAlat = (req, res) => {
                     return;
                 }
 
-                let dendaItem = 0;
+                let dendaKondisi = 0;
                 const harga = toolDetail.harga;
-                const jumlah = toolDetail.jumlah;
-
-                if (lateDays > 0) {
-                    const lateFineCalculated = 0.1 * harga * lateDays;
-                    dendaItem += Math.max(lateFineCalculated, 30000);
-                }
 
                 if (item.kondisi === 'rusak') {
-                    dendaItem += (item.denda_manual || 0);
+                    dendaKondisi += (Number(item.denda_manual) || 0);
                 } else if (item.kondisi === 'hilang/rusak_total') {
-                    dendaItem += (harga * jumlah);
+                    dendaKondisi += harga; // Fine is per unit price now
                 }
 
-                totalDenda += dendaItem;
+                totalDenda += dendaKondisi;
 
                 pengembalianModel.insertPengembalian(id_data_peminjaman, item.id_alat, item.kondisi, (err) => {
                     if (err) {
@@ -135,6 +143,8 @@ const updatePengembalian = (req, res) => {
     pengembalianModel.updatePengembalian(id, { id_data_peminjaman, id_alat, kondisi }, (err, result) => {
         if (err) return res.status(500).json({ message: "Gagal update", error: err });
         if (result.affectedRows === 0) return res.status(404).json({ message: "Data tidak ditemukan" });
+
+        logModel.insertLog(req.user.id, "PENGEMBALIAN_UPDATE", `Updated return record ID: ${id}`, () => { });
         res.json({ message: "Data pengembalian berhasil diupdate" });
     });
 };
@@ -144,6 +154,8 @@ const deletePengembalian = (req, res) => {
     pengembalianModel.deletePengembalian(id, (err, result) => {
         if (err) return res.status(500).json({ message: "Gagal menghapus", error: err });
         if (result.affectedRows === 0) return res.status(404).json({ message: "Data tidak ditemukan" });
+
+        logModel.insertLog(req.user.id, "PENGEMBALIAN_DELETE", `Deleted return record ID: ${id}`, () => { });
         res.json({ message: "Data pengembalian berhasil dihapus" });
     });
 };

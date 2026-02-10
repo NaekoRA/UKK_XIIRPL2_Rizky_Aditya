@@ -23,6 +23,7 @@ const Login = () => {
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("userId", data.id);
                 localStorage.setItem("userRole", data.role);
+                localStorage.setItem("username", data.username);
 
                 Swal.fire({
                     title: "Berhasil",
@@ -57,7 +58,7 @@ const Login = () => {
         <div className="container d-flex justify-content-center align-items-center vh-100">
             <div className="card p-5 shadow-sm" style={{ maxWidth: "450px", width: "100%" }}>
                 <div className="text-center mb-4">
-                    <h2 className="fw-bold mb-2">UKK Inventaris</h2>
+                    <h2 className="fw-bold mb-2">Naeko_RentCos</h2>
                     <p className="text-muted">Silahkan masuk ke akun anda</p>
                 </div>
                 <form onSubmit={handleSubmit}>

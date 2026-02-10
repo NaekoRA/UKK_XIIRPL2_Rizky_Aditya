@@ -61,10 +61,10 @@ const login = (req, res) => {
         const passwordIsValid = bcrypt.compareSync(password, user.password);
         if (!passwordIsValid) return res.status(401).json({ message: "Password salah" });
 
-        const token = jwt.sign({ id: user.id, role: user.role }, "admin#123", { expiresIn: 86400 });
+        const token = jwt.sign({ id: user.id, role: user.role, username: user.username }, "admin#123", { expiresIn: 86400 });
 
         logModel.insertLog(user.id, "LOGIN", `User ${user.username} logged in`, () => { });
-        res.status(200).json({ auth: true, token, id: user.id, role: user.role });
+        res.status(200).json({ auth: true, token, id: user.id, role: user.role, username: user.username });
     });
 };
 

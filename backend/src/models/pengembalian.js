@@ -11,7 +11,18 @@ const updateStatusPeminjaman = (id_data_peminjaman, denda, callback) => {
 };
 
 const getAllPengembalian = (callback) => {
-    const q = "SELECT * FROM pengembalian WHERE deleted_at IS NULL";
+    const q = `
+        SELECT 
+            k.*, 
+            u.username as nama_peminjam, 
+            a.nama_alat 
+        FROM pengembalian k
+        JOIN data_peminjaman dp ON k.id_data_peminjaman = dp.id
+        JOIN users u ON dp.id_peminjam = u.id
+        JOIN alat a ON k.id_alat = a.id
+        WHERE k.deleted_at IS NULL
+        ORDER BY k.id DESC
+    `;
     koneksi.query(q, callback);
 };
 

@@ -1,7 +1,7 @@
 const koneksi = require("./db");
 
 const getAllPeminjaman = (callback) => {
-    const q = "SELECT * FROM peminjaman";
+    const q = "SELECT * FROM peminjaman where deleted_at IS NULL ";
     koneksi.query(q, callback);
 };
 
@@ -15,6 +15,23 @@ const getAllDataPeminjaman = (callback) => {
         JOIN peminjaman p ON dp.id = p.id_data_peminjaman
         JOIN alat a ON p.alat_id = a.id
         LEFT JOIN pengembalian kem ON (dp.id = kem.id_data_peminjaman AND p.alat_id = kem.id_alat)
+        WHERE dp.deleted_at IS NULL
+        GROUP BY dp.id
+        ORDER BY dp.created_at DESC
+    `;
+    koneksi.query(q, callback);
+};
+const monitoring = (callback) => {
+    const q = `
+        SELECT dp.*, u.username as nama_peminjam,
+        MAX(kem.di_kembalikan_pada) as di_kembalikan_pada,
+        GROUP_CONCAT(CONCAT(a.nama_alat, ' (', COALESCE(kem.kondisi, 'Dipinjam'), ')') SEPARATOR ', ') as kondisi_barang
+        FROM data_peminjaman dp
+        LEFT JOIN users u ON dp.id_peminjam = u.id
+        JOIN peminjaman p ON dp.id = p.id_data_peminjaman
+        JOIN alat a ON p.alat_id = a.id
+        LEFT JOIN pengembalian kem ON (dp.id = kem.id_data_peminjaman AND p.alat_id = kem.id_alat)
+        WHERE dp.deleted_at IS NULL and dp.status in ('disetujui', 'menunggu_pengembalian')
         GROUP BY dp.id
         ORDER BY dp.created_at DESC
     `;
@@ -78,9 +95,9 @@ const updatePeminjaman = (peminjamanId, alat_id, jumlah, callback) => {
     koneksi.query(q, [alat_id, jumlah, peminjamanId], callback);
 };
 
-const updateDataPeminjaman = (data_peminjamanId, id_peminjam, id_petugas, status, pinjam_sampai, alasan, callback) => {
-    const q = "UPDATE data_peminjaman SET id_peminjam = ?, id_petugas = ?, status = ?, pinjam_sampai = ?, alasan = ? WHERE id = ?";
-    koneksi.query(q, [id_peminjam, id_petugas, status, pinjam_sampai, alasan, data_peminjamanId], callback);
+const updateDataPeminjaman = (data_peminjamanId, id_peminjam, status, digunakan_pada, alasan, callback) => {
+    const q = "UPDATE data_peminjaman SET id_peminjam = ?, status = ?, digunakan_pada = ?, alasan = ? WHERE id = ?";
+    koneksi.query(q, [id_peminjam, status, digunakan_pada, alasan, data_peminjamanId], callback);
 };
 
 const deletePeminjaman = (peminjamanId, callback) => {
@@ -92,8 +109,10 @@ const deleteDataPeminjaman = (data_peminjamanId, callback) => {
     const q = `
         UPDATE data_peminjaman dp
         LEFT JOIN peminjaman p ON dp.id = p.id_data_peminjaman
+        LEFT JOIN pengembalian k ON dp.id = k.id_data_peminjaman
         SET dp.deleted_at = NOW(),
-            p.deleted_at = NOW()
+            p.deleted_at = NOW(),
+            k.deleted_at = NOW()
         WHERE dp.id = ? AND dp.deleted_at IS NULL
     `;
     koneksi.query(q, [data_peminjamanId], callback);
@@ -112,6 +131,7 @@ const getPeminjamanWithAlat = (id_data_peminjaman, callback) => {
 
 module.exports = {
     getPeminjamanWithAlat,
+    monitoring,
     getAllPeminjaman,
     getAllDataPeminjaman,
     getPeminjamanById,

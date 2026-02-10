@@ -6,6 +6,7 @@ const kategori_controller = require("../controllers/kategori_controller");
 const alat_controller = require("../controllers/alat_controller");
 const peminjaman_controller = require("../controllers/peminjaman_controller");
 const pengembalian_controller = require("../controllers/pengembalian_controller");
+const keranjang_controller = require("../controllers/keranjang_controller");
 const log = require("../models/log_model");
 
 const upload = require("../middleware/upload");
@@ -29,8 +30,7 @@ router.post("/alat", authJWT("admin"), upload.single('img'), alat_controller.cre
 router.put("/alat/:id", authJWT("admin"), upload.single('img'), alat_controller.updateAlat);
 router.delete("/alat/:id", authJWT("admin"), alat_controller.deleteAlat);
 
-
-router.get("/data/peminjaman", authJWT("petugas"), peminjaman_controller.getAllDataPeminjaman);
+router.get("/data/peminjaman", authJWT(), peminjaman_controller.getAllDataPeminjaman);
 router.get("/data/peminjamanku", authJWT(), peminjaman_controller.getdatapeminjamanById);
 router.put("/data/peminjaman/:id", authJWT("petugas"), peminjaman_controller.updateDataPeminjaman);
 router.get("/data/peminjaman/:id/detail", authJWT("petugas"), peminjaman_controller.getDetailDataPeminjaman);
@@ -45,11 +45,20 @@ router.put("/peminjaman/membatalkan/:id", authJWT("peminjam"), peminjaman_contro
 router.post("/peminjaman/ajukan-pengembalian", authJWT("peminjam"), peminjaman_controller.ajukanPengembalian);
 router.delete("/peminjaman/:id", authJWT("admin"), peminjaman_controller.deletePeminjaman);
 
+// petugas
+router.get("/monitoring", peminjaman_controller.monitoring)
 router.get("/pengembalian", pengembalian_controller.getAllPengembalian);
 router.get("/pengembalian/:id", pengembalian_controller.getPengembalianById);
 router.post("/pengembalian", authJWT("petugas"), pengembalian_controller.kembalikanAlat);
 router.put("/pengembalian/:id", authJWT("admin"), pengembalian_controller.updatePengembalian);
 router.delete("/pengembalian/:id", authJWT("admin"), pengembalian_controller.deletePengembalian);
+
+// keranjang
+router.get("/keranjang", authJWT("peminjam"), keranjang_controller.getCart);
+router.post("/keranjang", authJWT("peminjam"), keranjang_controller.addItem);
+router.put("/keranjang", authJWT("peminjam"), keranjang_controller.updateItem);
+router.delete("/keranjang/:alat_id", authJWT("peminjam"), keranjang_controller.removeItem);
+router.delete("/keranjang-clear", authJWT("peminjam"), keranjang_controller.clear);
 
 router.get("/log", authJWT("admin"), log.getLog);
 module.exports = router;

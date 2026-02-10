@@ -20,7 +20,33 @@ const DaftarAlat = () => {
     useEffect(() => {
         fetchAlat();
         fetchKategori();
+        fetchCart();
     }, []);
+
+    const fetchCart = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        try {
+            const response = await fetch("http://localhost:5000/api/keranjang", {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                // Map database fields to frontend state
+                const mappedCart = data.map(item => ({
+                    id: item.alat_id,
+                    nama_alat: item.nama_alat,
+                    harga: item.harga,
+                    img: item.img,
+                    jumlah: item.stok_tersedia,
+                    jumlah_pinjam: item.jumlah
+                }));
+                setCart(mappedCart);
+            }
+        } catch (error) {
+            console.error("Error fetch cart:", error);
+        }
+    };
 
     const fetchAlat = async () => {
         try {
@@ -44,7 +70,8 @@ const DaftarAlat = () => {
         }
     };
 
-    const handleAddToCart = (item) => {
+    const handleAddToCart = async (item) => {
+        const token = localStorage.getItem('token');
         const existingItem = cart.find(c => c.id === item.id);
         if (existingItem) {
             Swal.fire({
@@ -57,16 +84,35 @@ const DaftarAlat = () => {
             return;
         }
 
-        setCart([...cart, { ...item, jumlah_pinjam: 1 }]);
-        Swal.fire({
-            title: 'Ditambahkan!',
-            text: `${item.nama_alat} masuk ke keranjang`,
-            icon: 'success',
-            timer: 1000,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
+        try {
+            const params = new URLSearchParams();
+            params.append('alat_id', item.id);
+            params.append('jumlah', 1);
+
+            const response = await fetch("http://localhost:5000/api/keranjang", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: params.toString()
+            });
+
+            if (response.ok) {
+                setCart([...cart, { ...item, jumlah_pinjam: 1 }]);
+                Swal.fire({
+                    title: 'Ditambahkan!',
+                    text: `${item.nama_alat} masuk ke keranjang`,
+                    icon: 'success',
+                    timer: 1000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+        } catch (error) {
+            console.error("Error add to cart:", error);
+        }
     };
 
     const handlePinjam = async (e) => {
@@ -103,6 +149,13 @@ const DaftarAlat = () => {
                     text: 'Permintaan peminjaman beberapa alat berhasil diajukan',
                     icon: 'success'
                 });
+
+                // Clear cart from database
+                await fetch('http://localhost:5000/api/keranjang-clear', {
+                    method: "DELETE",
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
                 setCart([]);
                 setPinjamData({ digunakan_pada: '', alasan: '' });
                 fetchAlat();

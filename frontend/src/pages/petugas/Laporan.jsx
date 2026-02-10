@@ -126,17 +126,6 @@ const Laporan = () => {
                 </table>
             </div>
 
-            {/* Signature for Printing */}
-            <div className="d-none d-print-block mt-5">
-                <div className="d-flex justify-content-end">
-                    <div className="text-center" style={{ minWidth: '250px' }}>
-                        <p className="mb-5">Mengetahui,</p>
-                        <br />
-                        <p className="fw-bold text-decoration-underline mb-0">{petugasName || '..........................'}</p>
-                        <p className="text-muted small">Petugas Inventaris</p>
-                    </div>
-                </div>
-            </div>
 
             <style>{`
                 @media print {

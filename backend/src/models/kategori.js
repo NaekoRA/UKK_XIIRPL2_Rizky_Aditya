@@ -1,7 +1,7 @@
 const koneksi = require("./db");
 
 const checkKategoriById = (kategoriId, callback) => {
-    const q = "SELECT * FROM kategori WHERE id = ?";
+    const q = "SELECT * FROM kategori WHERE id = ? and deleted_at IS NULL";
     koneksi.query(q, [kategoriId], callback);
 };
 

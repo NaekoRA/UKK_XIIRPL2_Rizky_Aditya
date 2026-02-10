@@ -5,14 +5,20 @@ const ModalMonitoringReturn = ({ modalId, items, onClose, onSubmit }) => {
 
     useEffect(() => {
         if (items) {
-            setItemStates(items.map(item => ({
-                id_alat: item.alat_id,
-                nama_alat: item.nama_alat,
-                jumlah: item.jumlah,
-                harga: item.harga,
-                kondisi: 'baik',
-                denda_manual: 0
-            })));
+            const flattenedItems = [];
+            items.forEach(item => {
+                for (let i = 0; i < item.jumlah; i++) {
+                    flattenedItems.push({
+                        id_alat: item.alat_id,
+                        nama_alat: item.nama_alat,
+                        unit_ke: i + 1,
+                        harga: item.harga,
+                        kondisi: 'baik',
+                        denda_manual: 0
+                    });
+                }
+            });
+            setItemStates(flattenedItems);
         }
     }, [items]);
 
@@ -33,13 +39,12 @@ const ModalMonitoringReturn = ({ modalId, items, onClose, onSubmit }) => {
     };
 
     const calculateTotalFine = () => {
-        // This is just an estimation for the UI. Real calculation happens on backend.
         let total = 0;
         itemStates.forEach(item => {
             if (item.kondisi === 'rusak') {
                 total += item.denda_manual;
             } else if (item.kondisi === 'hilang/rusak_total') {
-                total += item.harga * item.jumlah;
+                total += item.harga; // Fine is per unit price
             }
         });
         return total;
@@ -71,8 +76,8 @@ const ModalMonitoringReturn = ({ modalId, items, onClose, onSubmit }) => {
                                 <tbody>
                                     {itemStates.map((item, index) => (
                                         <tr key={index}>
-                                            <td>{item.nama_alat}</td>
-                                            <td>{item.jumlah}</td>
+                                            <td>{item.nama_alat} <small className="text-muted">(Unit {item.unit_ke})</small></td>
+                                            <td>1</td>
                                             <td>
                                                 <select
                                                     className="form-control form-control-sm"

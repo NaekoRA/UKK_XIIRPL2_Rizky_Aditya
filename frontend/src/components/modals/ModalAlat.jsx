@@ -2,7 +2,7 @@ import React from 'react';
 
 const ModalAlat = ({ formData, setFormData, kategori, handleSubmit, modalId }) => {
     return (
-        <div className="modal fade" id={modalId} tabIndex="-1" aria-hidden="true">
+        <div className="modal fade" id={modalId} data-bs-backdrop="static" data-bs-keyboard="false" tabIndex="-1" aria-hidden="true">
             <div className="modal-dialog">
                 <div className="modal-content">
                     <div className="modal-header">

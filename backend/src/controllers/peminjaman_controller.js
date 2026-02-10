@@ -11,6 +11,14 @@ const getAllPeminjaman = (req, res) => {
     });
 };
 
+const monitoring = (req, res) => {
+    peminjamanModel.monitoring((err, results) => {
+        if (err) return res.status(500).json({ message: "Error mengambil data peminjaman", error: err });
+        res.json(results);
+    });
+};
+
+
 const getAllDataPeminjaman = (req, res) => {
     peminjamanModel.getAllDataPeminjaman((err, results) => {
         if (err) return res.status(500).json({ message: "Error mengambil data peminjaman", error: err });
@@ -68,7 +76,7 @@ const ajukanPengembalian = (req, res) => {
 };
 
 const mengajukanPeminjaman = (req, res) => {
-    const id_peminjam = req.user.id;
+    const id_peminjam = req.body.id_peminjam || req.user.id;
     let { alat_id, jumlah, digunakan_pada, alasan } = req.body;
 
     if (!Array.isArray(alat_id)) {
@@ -135,13 +143,12 @@ const updatePeminjaman = (req, res) => {
 
 const updateDataPeminjaman = (req, res) => {
     const data_peminjamanId = req.params.id;
-    const { id_peminjam, status, pinjam_sampai } = req.body;
-    const id_petugas = req.user.id;
+    const { id_peminjam, status, digunakan_pada, alasan } = req.body;
 
-    peminjamanModel.updateDataPeminjaman(data_peminjamanId, id_peminjam, id_petugas, status, pinjam_sampai, (err, results) => {
+    peminjamanModel.updateDataPeminjaman(data_peminjamanId, id_peminjam, status, digunakan_pada, alasan, (err, results) => {
         if (err) return res.status(500).json({ message: "Gagal update data peminjaman", error: err });
         if (results.affectedRows === 0) return res.status(404).json({ message: "Data peminjaman tidak ditemukan" });
-        res.json({ message: "Data peminjaman berhasil diupdate", id_peminjam, id_petugas, status, pinjam_sampai });
+        res.json({ message: "Data peminjaman berhasil diupdate", id_peminjam, status, digunakan_pada, alasan });
     });
 };
 
@@ -197,6 +204,7 @@ const deleteDataPeminjaman = (req, res) => {
 
 module.exports = {
     mengajukanPeminjaman,
+    monitoring,
     menyetujuiPeminjaman,
     membatalkanPeminjaman,
     ajukanPengembalian,

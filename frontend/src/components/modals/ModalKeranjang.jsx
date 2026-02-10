@@ -3,18 +3,54 @@ import React from 'react';
 const ModalKeranjang = ({ cart, setCart, pinjamData, setPinjamData, handlePinjam, modalId }) => {
     const totalHarga = cart.reduce((sum, item) => sum + (item.harga * item.jumlah_pinjam), 0);
 
-    const updateJumlah = (id, change) => {
-        setCart(prevCart => prevCart.map(item => {
-            if (item.id === id) {
-                const newJumlah = Math.max(1, Math.min(item.jumlah, item.jumlah_pinjam + change));
-                return { ...item, jumlah_pinjam: newJumlah };
+    const updateJumlah = async (id, change) => {
+        const token = localStorage.getItem('token');
+        const item = cart.find(i => i.id === id);
+        if (!item) return;
+
+        const newJumlah = Math.max(1, Math.min(item.jumlah, item.jumlah_pinjam + change));
+
+        try {
+            const params = new URLSearchParams();
+            params.append('alat_id', id);
+            params.append('jumlah', newJumlah);
+
+            const response = await fetch("http://localhost:5000/api/keranjang", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: params.toString()
+            });
+
+            if (response.ok) {
+                setCart(prevCart => prevCart.map(item => {
+                    if (item.id === id) {
+                        return { ...item, jumlah_pinjam: newJumlah };
+                    }
+                    return item;
+                }));
             }
-            return item;
-        }));
+        } catch (error) {
+            console.error("Error update cart quantity:", error);
+        }
     };
 
-    const removeFromCart = (id) => {
-        setCart(prevCart => prevCart.filter(item => item.id !== id));
+    const removeFromCart = async (id) => {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`http://localhost:5000/api/keranjang/${id}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                setCart(prevCart => prevCart.filter(item => item.id !== id));
+            }
+        } catch (error) {
+            console.error("Error remove from cart:", error);
+        }
     };
 
     return (
@@ -100,6 +136,10 @@ const ModalKeranjang = ({ cart, setCart, pinjamData, setPinjamData, handlePinjam
                                     </div>
                                 </>
                             )}
+                            <div className="form-check">
+                                <input type="checkbox" className="form-check-input" required />
+                                <a href="/peminjam/snk" className="form-check-label">Saya menyetujui syarat & ketentuan</a>
+                            </div>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
